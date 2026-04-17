@@ -1,0 +1,23 @@
+{
+  "name": "fields-pg-cdc",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "fields-db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "fields",
+    "topic.prefix": "fields_cdc",
+    "plugin.name": "pgoutput",
+    "publication.autocreate.mode": "filtered",
+    "table.include.list": "public.seasons,public.fields,public.contours,public.crop_rotations",
+    "slot.name": "debezium_fields_analytics",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+    "heartbeat.interval.ms": "10000",
+    "tombstones.on.delete": "true"
+  }
+}
