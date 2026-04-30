@@ -7,12 +7,12 @@ from src.clickhouse_client import get_client
 
 router = APIRouter(tags=["analytics"])
 
-# Верхняя граница для дашборда (Гант до 2k строк); не путать с устаревшим le=500 в старых образах.
+# Upper bound for dashboard records (Gantt can render up to this limit safely).
 CROP_RECORDS_MAX_LIMIT = 10_000
 
 
 def _crop_where(org: str, season_id: Optional[str]) -> tuple[str, dict]:
-    """WHERE для fact_crop_rotation: организация и опционально сезон."""
+    """Build WHERE clause for fact_crop_rotation by organization and optional season."""
     if season_id and season_id.strip():
         sid = season_id.strip()
         return (

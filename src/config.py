@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     FIELDS_DATABASE_URL: str = ""
     METEO_DATABASE_URL: str = ""
     DZZ_DATABASE_URL: str = ""
-    # CDC: Debezium → Kafka → потребитель пересобирает dim_field + fact_crop_rotation (дебаунс).
+    # CDC flow: Debezium -> Kafka -> consumer rebuilds dim_field + fact_crop_rotation with debounce.
     CDC_ENABLED: bool = False
     KAFKA_BOOTSTRAP_SERVERS: str = "kafka:9092"
     KAFKA_FIELDS_TOPIC_PREFIX: str = "fields_cdc"

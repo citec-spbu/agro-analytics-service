@@ -18,7 +18,7 @@ async def _sync_loop() -> None:
     await asyncio.sleep(2)
     while True:
         try:
-            # При CDC поля обновляются из Kafka; цикл тянет ДЗЗ/метео и подстраховывает пустой dim.
+            # In CDC mode fields come from Kafka; this loop keeps DZZ/meteo data fresh and backfills empty dimensions.
             await asyncio.to_thread(run_sync_cycle)
         except Exception:
             log.exception("sync cycle failed")
