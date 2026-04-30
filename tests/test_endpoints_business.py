@@ -15,29 +15,31 @@ class _QueryResult:
 
 class FakeClickHouseClient:
     def query(self, sql, parameters):
-        if "FROM fact_dzz_scene" in sql and "avg(ndvi)" not in sql:
+        normalized_sql = " ".join(sql.split()).lower()
+
+        if "from fact_dzz_scene" in normalized_sql and "avg(ndvi)" not in normalized_sql:
             return _QueryResult([(5, date(2026, 4, 22), datetime(2026, 4, 22, 12, 0, 0))])
-        if "FROM fact_meteo_observation" in sql and "toDate(date_time)" not in sql:
+        if "from fact_meteo_observation" in normalized_sql and "todate(date_time)" not in normalized_sql:
             return _QueryResult([(10, datetime(2026, 4, 22, 11, 0, 0))])
-        if "uniqExact(field_id)" in sql:
+        if "uniqexact(field_id)" in normalized_sql:
             return _QueryResult([(2, 4, 80.0)])
-        if "FROM dim_field" in sql and "field_area_ha" not in sql:
+        if "from dim_field" in normalized_sql and "sum(contour_count)" in normalized_sql:
             return _QueryResult([(2, 4, 82.5)])
-        if "FROM fact_crop_rotation" in sql and "uniqExact(culture)" in sql:
+        if "from fact_crop_rotation" in normalized_sql and "uniqexact(culture)" in normalized_sql:
             return _QueryResult([(6, 3, 50.5)])
-        if "FROM fact_crop_rotation" in sql and "GROUP BY season_id" in sql:
+        if "from fact_crop_rotation" in normalized_sql and "group by season_id" in normalized_sql:
             return _QueryResult([("season-a", "Season A", date(2026, 4, 1))])
-        if "FROM fact_dzz_scene" in sql and "avg(ndvi)" in sql:
+        if "from fact_dzz_scene" in normalized_sql and "avg(ndvi)" in normalized_sql:
             return _QueryResult([(date(2026, 4, 20), 0.61, 3)])
-        if "FROM fact_meteo_observation" in sql and "toDate(date_time)" in sql:
+        if "from fact_meteo_observation" in normalized_sql and "todate(date_time)" in normalized_sql:
             return _QueryResult([(date(2026, 4, 20), 21.4, 1.2, 65.0)])
-        if "FROM dim_field" in sql and "field_area_ha" in sql:
+        if "from dim_field" in normalized_sql and "select field_id, field_name, field_area_ha, contour_count" in normalized_sql:
             return _QueryResult([("field-1", "Поле 1", 44.2, 2)])
-        if "FROM fact_crop_rotation" in sql and "GROUP BY culture" in sql:
+        if "from fact_crop_rotation" in normalized_sql and "group by culture" in normalized_sql:
             return _QueryResult([("Пшеница", 3, 20.0)])
-        if "FROM fact_crop_rotation" in sql and "toStartOfMonth(start_date)" in sql:
+        if "from fact_crop_rotation" in normalized_sql and "tostartofmonth(start_date)" in normalized_sql:
             return _QueryResult([(date(2026, 4, 1), "Пшеница", 2)])
-        if "FROM fact_crop_rotation" in sql and "ORDER BY start_date DESC" in sql:
+        if "from fact_crop_rotation" in normalized_sql and "order by start_date desc" in normalized_sql:
             return _QueryResult(
                 [("Поле 1", "Season A", "Контур 1", "Пшеница", "Сорт 1", date(2026, 3, 1), None, 10.0, 4.2)]
             )
