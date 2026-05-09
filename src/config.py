@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     KAFKA_FIELDS_TOPIC_PREFIX: str = "fields_cdc"
     KAFKA_CONSUMER_GROUP: str = "analytics-fields-warehouse"
     FIELDS_SYNC_DEBOUNCE_SECONDS: float = 3.0
+    # При CDC_ENABLED=true периодический цикл не читает PostgreSQL для полей/сезонов —
+    # только Kafka-события. Если Debezium не зарегистрирован или consumer пропустил
+    # сообщения (auto.offset.reset=latest), витрины устаревают. Этот интервал задаёт
+    # резервную полную пересборку dim_field + fact из PostgreSQL (0 = отключить).
+    FIELDS_FULL_SYNC_INTERVAL_SECONDS: float = 300.0
 
     model_config = SettingsConfigDict(env_prefix="APP_", env_file=".env", extra="ignore")
 

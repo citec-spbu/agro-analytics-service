@@ -111,14 +111,34 @@ def analytics_summary(
 @router.get("/crops/seasons")
 def crops_seasons(user: TokenPayload = Depends(require_user)):
     ch = get_client()
+    # Раньше брали сезоны только из fact_crop_rotation — туда попадают записи только
+    # если есть контур и строка севооборота. Поля без контуров исчезали из списка сезонов.
+    # Объединяем с dim_field (поля/сезоны из PostgreSQL уже есть в витрине даже при contour_count=0).
     rows = ch.query(
         """
         SELECT
             season_id,
             any(season_name) AS season_name,
-            max(start_date) AS last_start
-        FROM fact_crop_rotation
-        WHERE organization_id = {org:String}
+            max(last_start) AS last_start
+        FROM (
+            SELECT
+                season_id,
+                any(season_name) AS season_name,
+                max(start_date) AS last_start
+            FROM fact_crop_rotation
+            WHERE organization_id = {org:String}
+            GROUP BY season_id
+
+            UNION ALL
+
+            SELECT
+                season_id,
+                any(season_name) AS season_name,
+                toDate('1970-01-01') AS last_start
+            FROM dim_field
+            WHERE organization_id = {org:String}
+            GROUP BY season_id
+        )
         GROUP BY season_id
         ORDER BY last_start DESC, season_name
         """,

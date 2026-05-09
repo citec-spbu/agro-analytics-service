@@ -27,7 +27,12 @@ class FakeClickHouseClient:
             return _QueryResult([(2, 4, 82.5)])
         if "from fact_crop_rotation" in normalized_sql and "uniqexact(culture)" in normalized_sql:
             return _QueryResult([(6, 3, 50.5)])
-        if "from fact_crop_rotation" in normalized_sql and "group by season_id" in normalized_sql:
+        if (
+            "union all" in normalized_sql
+            and "from dim_field" in normalized_sql
+            and "from fact_crop_rotation" in normalized_sql
+            and "group by season_id" in normalized_sql
+        ):
             return _QueryResult([("season-a", "Season A", date(2026, 4, 1))])
         if "from fact_dzz_scene" in normalized_sql and "avg(ndvi)" in normalized_sql:
             return _QueryResult([(date(2026, 4, 20), 0.61, 3)])
