@@ -22,6 +22,21 @@ def _crop_where(org: str, season_id: Optional[str]) -> tuple[str, dict]:
     return "organization_id = {org:String}", {"org": org}
 
 
+def _field_where(org: str, season_id: Optional[str]) -> tuple[str, dict]:
+    """Build WHERE clause for dim_field by organization and optional season.
+
+    Поля и контуры — инвентарь сезона из dim_field, а не из fact_crop_rotation:
+    контуры без записи севооборота тоже должны учитываться.
+    """
+    if season_id and season_id.strip():
+        sid = season_id.strip()
+        return (
+            "organization_id = {org:String} AND season_id = {season_id:String}",
+            {"org": org, "season_id": sid},
+        )
+    return "organization_id = {org:String}", {"org": org}
+
+
 @router.get("/summary")
 def analytics_summary(
     season_id: Optional[str] = Query(
@@ -49,34 +64,15 @@ def analytics_summary(
         """,
         parameters={"org": org},
     ).result_rows[0]
-    if season_id and season_id.strip():
-        fields = ch.query(
-            f"""
-            SELECT
-                uniqExact(field_id),
-                uniqExact(contour_id),
-                sum(max_ha)
-            FROM (
-                SELECT
-                    field_id,
-                    contour_id,
-                    max(coalesce(contour_area_ha, 0)) AS max_ha
-                FROM fact_crop_rotation
-                WHERE {crop_sql}
-                GROUP BY field_id, contour_id
-            ) AS by_field_contour
-            """,
-            parameters=crop_params,
-        ).result_rows[0]
-    else:
-        fields = ch.query(
-            """
-            SELECT count(), sum(contour_count), sum(coalesce(field_area_ha, 0))
-            FROM dim_field
-            WHERE organization_id = {org:String}
-            """,
-            parameters={"org": org},
-        ).result_rows[0]
+    field_sql, field_params = _field_where(org, season_id)
+    fields = ch.query(
+        f"""
+        SELECT count(), sum(contour_count), sum(coalesce(field_area_ha, 0))
+        FROM dim_field
+        WHERE {field_sql}
+        """,
+        parameters=field_params,
+    ).result_rows[0]
     crops = ch.query(
         f"""
         SELECT

@@ -21,8 +21,6 @@ class FakeClickHouseClient:
             return _QueryResult([(5, date(2026, 4, 22), datetime(2026, 4, 22, 12, 0, 0))])
         if "from fact_meteo_observation" in normalized_sql and "todate(date_time)" not in normalized_sql:
             return _QueryResult([(10, datetime(2026, 4, 22, 11, 0, 0))])
-        if "uniqexact(field_id)" in normalized_sql:
-            return _QueryResult([(2, 4, 80.0)])
         if "from dim_field" in normalized_sql and "sum(contour_count)" in normalized_sql:
             return _QueryResult([(2, 4, 82.5)])
         if "from fact_crop_rotation" in normalized_sql and "uniqexact(culture)" in normalized_sql:
@@ -95,6 +93,22 @@ def test_analytics_summary_accepts_trimmed_season_id(monkeypatch) -> None:
     response = client.get("/api/analytics/summary", params={"season_id": "  season-a  "})
     assert response.status_code == 200
     assert response.json()["filter_season_id"] == "season-a"
+
+
+def test_analytics_summary_season_inventory_from_dim_field(monkeypatch) -> None:
+    """Для выбранного сезона поля/контуры/площадь берутся из dim_field (инвентарь),
+    а не из fact_crop_rotation: контуры без севооборота тоже учитываются."""
+    client = _build_client(monkeypatch)
+    body = client.get("/api/analytics/summary", params={"season_id": "season-a"}).json()
+
+    # инвентарь сезона из dim_field (2, 4, 82.5)
+    assert body["fields"] == 2
+    assert body["contours_total"] == 4
+    assert body["area_ha_total"] == 82.5
+    # севооборотные показатели из fact_crop_rotation (6, 3, 50.5)
+    assert body["crop_rotation_records"] == 6
+    assert body["crop_rotation_cultures_distinct"] == 3
+    assert body["crop_rotation_area_ha_sum"] == 50.5
 
 
 def test_analytics_unauthorized_when_dependency_fails(monkeypatch) -> None:
